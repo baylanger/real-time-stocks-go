@@ -1,0 +1,90 @@
+[
+  {
+    "name": "BIDU",
+    "initialPrice": 102.57,
+    "minTrade": 250000,
+    "maxTrade": 2500000,
+    "volatility": 100,
+    "maxDelta": 25
+  },
+  {
+    "name": "CBS",
+    "initialPrice": 48.03,
+    "minTrade": 250000,
+    "maxTrade": 2500000,
+    "volatility": 100,
+    "maxDelta": 25
+  },
+  {
+    "name": "EA",
+    "initialPrice": 23.61,
+    "minTrade": 250000,
+    "maxTrade": 2500000,
+    "volatility": 100,
+    "maxDelta": 25
+  },
+  {
+    "name": "FB",
+    "initialPrice": 23.29,
+    "minTrade": 250000,
+    "maxTrade": 2500000,
+    "volatility": 100,
+    "maxDelta": 25
+  },
+  {
+    "name": "GOOG",
+    "initialPrice": 879.73,
+    "minTrade": 250000,
+    "maxTrade": 2500000,
+    "volatility": 100,
+    "maxDelta": 25
+  },
+  {
+    "name": "LNKD",
+    "initialPrice": 170.70,
+    "minTrade": 250000,
+    "maxTrade": 2500000,
+    "volatility": 100,
+    "maxDelta": 25
+  },
+  {
+    "name": "MSFT",
+    "initialPrice": 35.67,
+    "minTrade": 250000,
+    "maxTrade": 2500000,
+    "volatility": 100,
+    "maxDelta": 25
+  },
+  {
+    "name": "ORCL",
+    "initialPrice": 33.81,
+    "minTrade": 250000,
+    "maxTrade": 2500000,
+    "volatility": 100,
+    "maxDelta": 25
+  },
+  {
+    "name": "TRI",
+    "initialPrice": 3.77,
+    "minTrade": 250000,
+    "maxTrade": 2500000,
+    "volatility": 100,
+    "maxDelta": 25
+  },
+  {
+    "name": "YHOO",
+    "initialPrice": 27.04,
+    "minTrade": 250000,
+    "maxTrade": 2500000,
+    "volatility": 100,
+    "maxDelta": 25
+  },
+  {
+    "name": "ZNGA",
+    "initialPrice": 2.84,
+    "minTrade": 250000,
+    "maxTrade": 2500000,
+    "volatility": 100,
+    "maxDelta": 25
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "publish_key": "demo",
+  "subscribe_key": "demo",
+  "secret_key": "demo",
+  "auth_key": "my_auth"
+}
