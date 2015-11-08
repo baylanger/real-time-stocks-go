@@ -2,5 +2,6 @@
   "publish_key": "demo",
   "subscribe_key": "demo",
   "secret_key": "demo",
-  "auth_key": "my_auth"
+  "auth_key": "my_auth",
+  "port": "8888"
 }

@@ -7,6 +7,7 @@ import (
 	"log"
 	"math"
 	"math/rand"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -31,6 +32,7 @@ func main() {
 	SetUpChannelGroup()
 	GrantPermissions()
 	RunStocks()
+	ExposeKeysEndpoint()
 }
 
 func LoadConfig() {
@@ -172,6 +174,7 @@ type Auths struct {
 	Sub    string `json:"subscribe_key"`
 	Secret string `json:"secret_key"`
 	Auth   string `json:"auth_key"`
+	Port   string `json:"port"`
 }
 
 type Stock struct {
@@ -244,6 +247,22 @@ type StreamMessage struct {
 	Delta      string `json:"delta"`
 	Percentage string `json:"perc"`
 	Vol        int    `json:"vol"`
+}
+
+// Exposing keys for clients throught HTTP
+func GetConfigsHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(
+		fmt.Sprintf("{\"publish_key\": \"%s\", \"subscribe_key\": \"%s\"}",
+			auths.Pub, auths.Sub)))
+}
+
+func ExposeKeysEndpoint() {
+	http.HandleFunc("/get_configs", GetConfigsHandler)
+	err := http.ListenAndServe(fmt.Sprintf(":%s", auths.Port), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // Handlers
