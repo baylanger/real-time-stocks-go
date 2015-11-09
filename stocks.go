@@ -32,7 +32,7 @@ func main() {
 	SetUpChannelGroup()
 	GrantPermissions()
 	RunStocks()
-	ExposeKeysEndpoint()
+	ServeHttp()
 }
 
 func LoadConfig() {
@@ -257,8 +257,10 @@ func GetConfigsHandler(w http.ResponseWriter, req *http.Request) {
 			auths.Pub, auths.Sub)))
 }
 
-func ExposeKeysEndpoint() {
+func ServeHttp() {
+	http.Handle("/", http.FileServer(http.Dir("./public")))
 	http.HandleFunc("/get_configs", GetConfigsHandler)
+
 	err := http.ListenAndServe(fmt.Sprintf(":%s", auths.Port), nil)
 	if err != nil {
 		log.Fatal(err)
