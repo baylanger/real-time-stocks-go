@@ -14,15 +14,16 @@ import (
 )
 
 const (
-	CHAT_CHANNEL    = "stock-chat"
-	CHANNEL_GROUP   = "stockblast"
-	HISTORY_CHANNEL = "MSFT"
-	GRANT_TTL       = 1
+	BOOTSTRAP_INSTANCE_SUFFIX = "-bootstrap"
+	CONFIG_PATH_ENV_VAR       = "PUBNUB_STOCKS_CONFIG"
+	CONFIG_FILE               = "/config.json"
+	STOCKS_FILE               = "/stocks.json"
+	TIME_FORMAT               = "03:04:05pm"
 )
 
 var (
 	stocks        []Stock
-	auths         Auths
+	config        Config
 	stockNames    string
 	bootstrapAuth string
 )
@@ -36,23 +37,25 @@ func main() {
 }
 
 func LoadConfig() {
+	configPath := os.Getenv(CONFIG_PATH_ENV_VAR)
+
 	// Auths
-	file, err := os.Open("auths.json")
+	file, err := os.Open(configPath + CONFIG_FILE)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	auths = Auths{}
+	config = Config{}
 
 	decoder := json.NewDecoder(file)
 
-	err = decoder.Decode(&auths)
+	err = decoder.Decode(&config)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// Stocks
-	file, err = os.Open("stocks.json")
+	file, err = os.Open(configPath + STOCKS_FILE)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -74,7 +77,7 @@ func LoadConfig() {
 
 	// Authentication key for management instance inside GrantPermissions()
 	// function
-	bootstrapAuth = auths.Auth + "-bootstrap"
+	bootstrapAuth = config.Keys.Auth + BOOTSTRAP_INSTANCE_SUFFIX
 }
 
 func SetUpChannelGroup() {
@@ -82,20 +85,21 @@ func SetUpChannelGroup() {
 	successChannel := make(chan []byte)
 	done := make(chan bool)
 
-	pubnub := messaging.NewPubnub(auths.Pub, auths.Sub, auths.Secret, "",
+	pubnub := messaging.NewPubnub(config.Keys.Pub, config.Keys.Sub, "", "",
 		false, "")
 
 	pubnub.SetAuthenticationKey(bootstrapAuth)
 
 	// Remove Group
-	go pubnub.ChannelGroupRemoveGroup(CHANNEL_GROUP, successChannel, errorChannel)
+	go pubnub.ChannelGroupRemoveGroup(config.StocksChannelGroup,
+		successChannel, errorChannel)
 	go handleResponse(successChannel, errorChannel,
 		messaging.GetNonSubscribeTimeout(), done)
 
 	<-done
 
 	// Create it from the scratch
-	go pubnub.ChannelGroupAddChannel(CHANNEL_GROUP, stockNames,
+	go pubnub.ChannelGroupAddChannel(config.StocksChannelGroup, stockNames,
 		successChannel, errorChannel)
 	go handleResponse(successChannel, errorChannel,
 		messaging.GetNonSubscribeTimeout(), done)
@@ -109,13 +113,14 @@ func GrantPermissions() {
 
 	done := make(chan bool)
 
-	pubnub := messaging.NewPubnub(auths.Pub, auths.Sub, "", "",
-		false, "")
+	pubnub := messaging.NewPubnub(config.Keys.Pub, config.Keys.Sub,
+		config.Keys.Secret, "", false, "")
 
 	pubnub.SetAuthenticationKey(bootstrapAuth)
 
 	// Allow current Pubnub instance to managet the channel group
-	go pubnub.GrantChannelGroup(CHANNEL_GROUP, false, true, GRANT_TTL,
+	go pubnub.GrantChannelGroup(config.StocksChannelGroup,
+		false, true, config.GrantTTL,
 		bootstrapAuth, successChannel, errorChannel)
 	go handleResponse(successChannel, errorChannel,
 		messaging.GetNonSubscribeTimeout(), done)
@@ -123,7 +128,8 @@ func GrantPermissions() {
 	<-done
 
 	// Allow unauthorized users to subscribe to stockblast channel group
-	go pubnub.GrantChannelGroup(CHANNEL_GROUP, true, false, GRANT_TTL,
+	go pubnub.GrantChannelGroup(config.StocksChannelGroup,
+		true, false, config.GrantTTL,
 		"", successChannel, errorChannel)
 	go handleResponse(successChannel, errorChannel,
 		messaging.GetNonSubscribeTimeout(), done)
@@ -131,7 +137,7 @@ func GrantPermissions() {
 	<-done
 
 	// Unauthorized users can both read and write on chat channel
-	go pubnub.GrantSubscribe(CHAT_CHANNEL, true, true, GRANT_TTL, "",
+	go pubnub.GrantSubscribe(config.ChatChannel, true, true, config.GrantTTL, "",
 		successChannel, errorChannel)
 	go handleResponse(successChannel, errorChannel,
 		messaging.GetNonSubscribeTimeout(), done)
@@ -139,8 +145,8 @@ func GrantPermissions() {
 	<-done
 
 	// Unauthorized users can only read history
-	go pubnub.GrantSubscribe(HISTORY_CHANNEL, true, false, GRANT_TTL, "",
-		successChannel, errorChannel)
+	go pubnub.GrantSubscribe(config.HistoryChannel,
+		true, false, config.GrantTTL, "", successChannel, errorChannel)
 	go handleResponse(successChannel, errorChannel,
 		messaging.GetNonSubscribeTimeout(), done)
 
@@ -148,8 +154,8 @@ func GrantPermissions() {
 
 	// Allow stock tickers authorized by auths.Auth key to publish to stock
 	// channels
-	go pubnub.GrantSubscribe(stockNames, false, true, GRANT_TTL,
-		auths.Auth, successChannel, errorChannel)
+	go pubnub.GrantSubscribe(stockNames, false, true, config.GrantTTL,
+		config.Keys.Auth, successChannel, errorChannel)
 	go handleResponse(successChannel, errorChannel,
 		messaging.GetNonSubscribeTimeout(), done)
 
@@ -169,12 +175,18 @@ func RunStocks() {
 	<-done
 }
 
-type Auths struct {
-	Pub    string `json:"publish_key"`
-	Sub    string `json:"subscribe_key"`
-	Secret string `json:"secret_key"`
-	Auth   string `json:"auth_key"`
-	Port   string `json:"port"`
+type Config struct {
+	Port               string `json:"port"`
+	GrantTTL           int    `json:"grant_ttl"`
+	StocksChannelGroup string `json:"stocks_channel_goroup"`
+	HistoryChannel     string `json:"history_channel"`
+	ChatChannel        string `json:"chat_channel"`
+	Keys               struct {
+		Pub    string `json:"publish_key"`
+		Sub    string `json:"subscribe_key"`
+		Secret string `json:"secret_key"`
+		Auth   string `json:"auth_key"`
+	}
 }
 
 type Stock struct {
@@ -190,9 +202,9 @@ type Stock struct {
 func (stock *Stock) RunCycle() {
 	cycle := make(chan bool)
 	i := 0
-	pubnub := messaging.NewPubnub(auths.Pub, auths.Sub, auths.Secret, "",
+	pubnub := messaging.NewPubnub(config.Keys.Pub, config.Keys.Sub, "", "",
 		false, "")
-	pubnub.SetAuthenticationKey(auths.Auth)
+	pubnub.SetAuthenticationKey(config.Keys.Auth)
 
 	for {
 		go stock.UpdateValuesAndPublish(pubnub, cycle)
@@ -217,7 +229,7 @@ func (stock *Stock) UpdateValuesAndPublish(pubnub *messaging.Pubnub,
 	vol := Randn(stock.Volatility, 1000) * 10
 
 	streamMessage := StreamMessage{
-		Time:       time.Now().Format("03:04:05pm"),
+		Time:       time.Now().Format(TIME_FORMAT),
 		Price:      fmt.Sprintf("%.2f", stock.CurrentPrice),
 		Delta:      fmt.Sprintf("%.2f", delta),
 		Percentage: fmt.Sprintf("%.2f", percentage),
@@ -254,14 +266,15 @@ func GetConfigsHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(
 		fmt.Sprintf("{\"publish_key\": \"%s\", \"subscribe_key\": \"%s\"}",
-			auths.Pub, auths.Sub)))
+			config.Keys.Pub, config.Keys.Sub)))
 }
 
 func ServeHttp() {
-	http.Handle("/", http.FileServer(http.Dir("./public")))
+	publicPath := os.Getenv("PUBNUB_STOCKS_PUBLIC")
+	http.Handle("/", http.FileServer(http.Dir(publicPath)))
 	http.HandleFunc("/get_configs", GetConfigsHandler)
 
-	err := http.ListenAndServe(fmt.Sprintf(":%s", auths.Port), nil)
+	err := http.ListenAndServe(fmt.Sprintf(":%s", config.Port), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
