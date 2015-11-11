@@ -1,0 +1,13 @@
+{
+  "keys": {
+    "publish_key": "demo",
+    "subscribe_key": "demo",
+    "secret_key": "demo",
+    "auth_key": "my_auth"
+  },
+  "stocks_channel_group": "stockblast",
+  "chat_channel": "chat",
+  "history_channel": "MSFT",
+  "port" : "80",
+  "grant_ttl": 1
+}
