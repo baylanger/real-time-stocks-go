@@ -39,6 +39,13 @@ func main() {
 func LoadConfig() {
 	configPath := os.Getenv(CONFIG_PATH_ENV_VAR)
 
+	// Fallback to local config files
+	if configPath == "" {
+		configPath = "."
+	}
+
+	fmt.Printf("Line is %s", configPath)
+
 	// Auths
 	file, err := os.Open(configPath + CONFIG_FILE)
 	if err != nil {
@@ -271,6 +278,12 @@ func GetConfigsHandler(w http.ResponseWriter, req *http.Request) {
 
 func ServeHttp() {
 	publicPath := os.Getenv("PUBNUB_STOCKS_PUBLIC")
+
+	// Fallback to the local public folder
+	if publicPath == "" {
+		publicPath = "./public"
+	}
+
 	http.Handle("/", http.FileServer(http.Dir(publicPath)))
 	http.HandleFunc("/get_configs", GetConfigsHandler)
 
