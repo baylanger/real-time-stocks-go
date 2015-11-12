@@ -297,27 +297,13 @@ func ServeHttp() {
 func handleResponse(successChannel, errorChannel chan []byte, timeout uint16,
 	finishedChannel chan bool) {
 
-await:
-	for {
-		select {
-		case success, ok := <-successChannel:
-			if !ok {
-				break await
-			}
-
-			fmt.Printf("%s\n", success)
-			break await
-		case failure, ok := <-errorChannel:
-			if !ok {
-				break await
-			}
-
-			fmt.Printf("ERROR: %s\n", failure)
-			break await
-		case <-time.After(time.Second * 3):
-			fmt.Println("Request timeout")
-			break await
-		}
+	select {
+	case success := <-successChannel:
+		fmt.Printf("%s\n", success)
+	case failure := <-errorChannel:
+		fmt.Printf("ERROR: %s\n", failure)
+	case <-time.After(time.Second * 3):
+		fmt.Println("Request timeout")
 	}
 
 	finishedChannel <- true
