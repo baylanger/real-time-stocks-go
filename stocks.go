@@ -302,7 +302,7 @@ func handleResponse(successChannel, errorChannel chan []byte, timeout uint16,
 		fmt.Printf("%s\n", success)
 	case failure := <-errorChannel:
 		fmt.Printf("ERROR: %s\n", failure)
-	case <-time.After(time.Second * 3):
+	case <-time.After(time.Second * time.Duration(timeout)):
 		fmt.Println("Request timeout")
 	}
 
