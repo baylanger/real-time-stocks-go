@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/anovikov1984/go/messaging"
+	"github.com/pubnub/go/messaging"
 	"log"
 	"math"
 	"math/rand"
