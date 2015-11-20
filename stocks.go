@@ -41,10 +41,8 @@ func LoadConfig() {
 
 	// Fallback to local config files
 	if configPath == "" {
-		configPath = "."
+		configPath = "./config/"
 	}
-
-	fmt.Printf("Line is %s", configPath)
 
 	// Auths
 	file, err := os.Open(configPath + CONFIG_FILE)
@@ -216,7 +214,6 @@ func (stock *Stock) RunCycle() {
 	for {
 		go stock.UpdateValuesAndPublish(pubnub, cycle)
 		<-cycle
-		fmt.Printf("Iteration #%d", i)
 		i++
 	}
 }
