@@ -183,7 +183,7 @@ func RunStocks() {
 type Config struct {
 	Port               string `json:"port"`
 	GrantTTL           int    `json:"grant_ttl"`
-	StocksChannelGroup string `json:"stocks_channel_goroup"`
+	StocksChannelGroup string `json:"stocks_channel_group"`
 	HistoryChannel     string `json:"history_channel"`
 	ChatChannel        string `json:"chat_channel"`
 	Keys               struct {
