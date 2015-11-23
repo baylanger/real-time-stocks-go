@@ -30,10 +30,12 @@ var (
 
 func main() {
 	LoadConfig()
+
+	go ServeHttp()
+
 	SetUpChannelGroup()
 	GrantPermissions()
 	RunStocks()
-	ServeHttp()
 }
 
 func LoadConfig() {
@@ -286,7 +288,7 @@ func ServeHttp() {
 
 	err := http.ListenAndServe(fmt.Sprintf(":%s", config.Port), nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 }
 
